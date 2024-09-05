@@ -21,6 +21,7 @@ export const POST = async (req: Request) => {
 
         console.log("Retrieved registration data from Redis:", registrationData);
         const format = JSON.stringify(registrationData)
+        
         // Parse the registration data as JSON
         let pendingRegistration;
         try {

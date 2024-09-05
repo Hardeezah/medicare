@@ -56,10 +56,10 @@ export const POST = async (req: Request) => {
         console.log("Storing registration data in Redis:", JSON.stringify(registrationData));
 
         const registrationDataString = JSON.stringify(registrationData);
-        await redis.setex(email, 3600, registrationDataString); // Store for 1 hour
+        await redis.setex(email, 3600, registrationData); // Store for 1 hour
 
         // Send OTP to the user's email
-        await sendOTPEmail(email, otp);
+        //await sendOTPEmail(email, otp);
 
         return NextResponse.json({ success: true, message: 'OTP sent to your email' }, { status: 201 });
      } catch (error: any) {

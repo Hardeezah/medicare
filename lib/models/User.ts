@@ -26,7 +26,7 @@ const UserSchema: Schema<IUser> = new mongoose.Schema({
   
 });
 
-UserSchema.pre<IUser>('save', async function (next) {
+/* UserSchema.pre<IUser>('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -34,6 +34,6 @@ UserSchema.pre<IUser>('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-
+ */
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 export default User;
