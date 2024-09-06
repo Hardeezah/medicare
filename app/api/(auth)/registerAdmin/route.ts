@@ -3,6 +3,8 @@ import dbConnect from '@/lib/db';
 import Hospital from '@/lib/models/Hospital';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import redis from '@/lib/redis';
+import { sendOTPEmail } from '@/lib/utils/email';
 
 export const POST = async (req: Request) => {
     try {
@@ -18,15 +20,19 @@ export const POST = async (req: Request) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const otp = crypto.randomBytes(3).toString('hex');
 
-        const admin = await Hospital.create({
+        const registrationData ={
             name: hospitalName,
             email,
             password: hashedPassword,
             otp,
-        });
-        await admin.save();
+        };
+        await redis.setex(email, 3600, JSON.stringify(registrationData)); // Store data in Redis for 1 hour
 
-        return NextResponse.json({ success: true, message: 'Admin created successfully', data: admin });
+        console.log("Storing registration data in Redis:", JSON.stringify(registrationData));
+
+        //await sendOTPEmail(email, otp);
+
+        return NextResponse.json({ success: true, message: 'OTP sent to email for verification' }, { status: 201 });
 
     } catch (error: any) {
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });

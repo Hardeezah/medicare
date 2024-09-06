@@ -18,7 +18,7 @@ const DoctorSchema: Schema<IDoctor> = new mongoose.Schema({
   hospital: { type: mongoose.Schema.Types.ObjectId, ref: 'Hospital', required: true },
   isVerified: { type: Boolean, default: false },
   otp: { type: String },
-  token: { type: String, unique: true },
+  token: { type: String, unique: true, required: true },
 },
 {
     timestamps: true,

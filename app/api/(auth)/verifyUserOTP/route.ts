@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import redis from '@/lib/redis';
 import User from '@/lib/models/User';
-import mongoose from 'mongoose';
-import { log } from 'console';
 
 export const POST = async (req: Request) => {
     try {

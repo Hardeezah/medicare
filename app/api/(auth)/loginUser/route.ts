@@ -20,9 +20,9 @@ export const POST = async (req: Request) => {
         }
         console.log(user.password);
         
-        const plainPassword = '123456';
+/*         const plainPassword = '123456';
         const storedHash = '$2a$10$l5c2LfG10JIe1a0Ix0i8eOqMrxYsqXjH5D/gj3og9f0.f0wzqQlye'; // The stored hash
-/*         
+ *//*         
         // Rehash the plain text password with the same salt rounds (10 in this case)
         const newHash = await bcrypt.hash(plainPassword, 10);
         console.log('New Hash:', newHash);
