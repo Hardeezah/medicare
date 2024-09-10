@@ -1,8 +1,31 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Hospital from '@/lib/models/Hospital';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { serialize } from 'cookie';
+import { TextEncoder } from 'util';
+
+// Secret keys for JWTs
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+const refreshTokenSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET!);
+
+// Function to generate access token
+async function signAccessToken(hospitalId: string, role: string) {
+    return new SignJWT({ hospitalId, role })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('15m') // Access token expires in 15 minutes
+        .sign(secret);
+}
+
+// Function to generate refresh token
+async function signRefreshToken(hospitalId: string, role: string) {
+    return new SignJWT({ hospitalId, role })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('7d') // Refresh token expires in 7 days
+        .sign(refreshTokenSecret);
+}
 
 export const POST = async (req: Request) => {
     try {
@@ -27,19 +50,11 @@ export const POST = async (req: Request) => {
             return NextResponse.json({ success: false, message: 'Admin not verified' }, { status: 403 });
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { hospitalId: hospital._id, role: 'admin' },
-            process.env.JWT_SECRET as string,
-            { expiresIn: '15m' } // JWT expires in 15 minutes
-        );
+        // Generate JWT access token using jose
+        const token = await signAccessToken(hospital._id.toString(), 'admin');
 
-        // Generate refresh token
-        const refreshToken = jwt.sign(
-            { hospitalId: hospital._id, role: 'admin' },
-            process.env.REFRESH_TOKEN_SECRET as string,
-            { expiresIn: '7d' } // Refresh token expires in 7 days
-        );
+        // Generate JWT refresh token using jose
+        const refreshToken = await signRefreshToken(hospital._id.toString(), 'admin');
 
         // Set refresh token as an HTTP-only cookie
         const refreshTokenCookie = serialize('refreshToken', refreshToken, {

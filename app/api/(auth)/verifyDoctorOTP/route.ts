@@ -67,6 +67,7 @@ export const POST = async (req: Request) => {
         return NextResponse.json({
             success: true,
             message: 'Doctor verified successfully. You can now log in using your login code.',
+            data: newDoctor, // Send the doctor object back to the client
             loginCode, // Send login code back to the doctor
         }, { status: 201 });
     } catch (error: any) {

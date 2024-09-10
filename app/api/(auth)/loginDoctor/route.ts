@@ -1,11 +1,35 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Doctor from '@/lib/models/Doctor';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { serialize } from 'cookie';
+import { TextEncoder } from 'util';
+
+// Secret for signing JWTs
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+const refreshTokenSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET!);
+
+// Function to sign the access token
+async function signAccessToken(doctorId: string, role: string) {
+    return new SignJWT({ doctorId, role })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('15m') // Access token expires in 15 minutes
+        .sign(secret);
+}
+
+// Function to sign the refresh token
+async function signRefreshToken(doctorId: string, role: string) {
+    return new SignJWT({ doctorId, role })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('7d') // Refresh token expires in 7 days
+        .sign(refreshTokenSecret);
+}
 
 export const POST = async (req: Request) => {
     try {
+        // Connect to the database
         await dbConnect();
         const { loginCode } = await req.json();
 
@@ -16,24 +40,16 @@ export const POST = async (req: Request) => {
             return NextResponse.json({ success: false, message: 'Invalid login code' }, { status: 400 });
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { doctorId: doctor._id, role: 'doctor' },
-            process.env.JWT_SECRET as string,
-            { expiresIn: '15m' } // Token expires in 15 minutes
-        );
+        // Sign access token using jose
+        const token = await signAccessToken(doctor._id.toString(), 'doctor');
 
-        // Generate refresh token
-        const refreshToken = jwt.sign(
-            { doctorId: doctor._id, role: 'doctor' },
-            process.env.REFRESH_TOKEN_SECRET as string,
-            { expiresIn: '7d' } // Refresh token expires in 7 days
-        );
+        // Sign refresh token using jose
+        const refreshToken = await signRefreshToken(doctor._id.toString(), 'doctor');
 
         // Set refresh token as an HTTP-only cookie
         const refreshTokenCookie = serialize('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // True in production
+            secure: process.env.NODE_ENV === 'production', // Set secure only in production
             path: '/',
             maxAge: 60 * 60 * 24 * 7, // 7 days
         });

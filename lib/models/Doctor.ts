@@ -2,6 +2,7 @@ import mongoose, { Document, Schema, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IDoctor extends Document {
+  _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
   password: string;
@@ -9,6 +10,7 @@ export interface IDoctor extends Document {
   isVerified: boolean;
   otp?: string;
   token?: string;
+  availableSlots: string[];
 }
 
 const DoctorSchema: Schema<IDoctor> = new mongoose.Schema({
@@ -19,6 +21,7 @@ const DoctorSchema: Schema<IDoctor> = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   otp: { type: String },
   token: { type: String, unique: true, required: true },
+  availableSlots: [{ type: String, required: true }],
 },
 {
     timestamps: true,

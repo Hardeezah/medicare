@@ -1,46 +1,49 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server';
+import { authMiddleware } from './middleware/auth'; // Import auth middleware
+import { roleCheckMiddleware } from './middleware/roleCheck'; // Import role-based middleware
 
-// Define roles allowed to access specific paths
-const rolePermissions = {
-    '/admin': ['admin'],       // Only admins can access /admin routes
-    '/doctor': ['doctor', 'admin'], // Doctors and admins can access /doctor routes
-    '/dashboard': ['user', 'doctor', 'admin'], // All authenticated users can access /dashboard
-};
+// Global middleware for applying authentication and role checks on API routes
+export async function middleware(req: NextRequest) {
+    const url = req.nextUrl.pathname;
 
-export function middleware(req: NextRequest) {
-    const token = req.headers.get('Authorization')?.split(' ')[1];
+    // Apply authentication to /api/admin, /api/doctor, and /api/user routes
+    if (url.startsWith('/api/user') || url.startsWith('/api/admin') || url.startsWith('/api/doctor')) {
+        const authResponse = await authMiddleware(req); // Apply auth check
+        if (authResponse.status !== 200) return authResponse; // Block if not authenticated
 
-    if (!token) {
-        return NextResponse.redirect(new URL('/login', req.url));
-    }
-
-    try {
-        // Verify the JWT token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-
-        // Determine the requested path
-        const { pathname } = req.nextUrl;
-
-        // Check if the user's role is allowed to access the requested path
-        const allowedRoles = Object.keys(rolePermissions).find(path => pathname.startsWith(path)) 
-            ? rolePermissions[pathname.split('/')[1] as keyof typeof rolePermissions]
-            : null;
-
-                if (allowedRoles && !allowedRoles.includes(decoded.role)) {
-            return NextResponse.json({ success: false, message: 'Access denied' }, { status: 403 });
+        if (url.startsWith('/api/admin')) {
+            const roleCheckResponse = await roleCheckMiddleware(req, 'admin'); // Check if the user is an admin
+            if (roleCheckResponse.status !== 200) return roleCheckResponse; // Block if not an admin
         }
 
-        // Attach user info to headers for further use in route handlers
-        req.headers.set('user', JSON.stringify(decoded));
-        return NextResponse.next(); // Continue to the route handler
-    } catch (err) {
-        // Redirect to login if the token is invalid or expired
-        return NextResponse.redirect(new URL('/login', req.url));
+        // Check role for doctor-specific routes
+        if (url.startsWith('/api/doctor')) {
+            const roleCheckResponse = await roleCheckMiddleware(req, 'doctor'); // Check if the user is a doctor
+            if (roleCheckResponse.status !== 200) {
+                // Allow admin to access doctor routes
+                const adminRoleCheckResponse = await roleCheckMiddleware(req, 'admin');
+                if (adminRoleCheckResponse.status !== 200) return adminRoleCheckResponse; // Block if not a doctor or admin
+            }
+        }
+
+        // Check role for user-specific routes
+        if (url.startsWith('/api/user')) {
+            const roleCheckResponse = await roleCheckMiddleware(req, 'user'); // Check if the user is a regular user
+            if (roleCheckResponse.status !== 200) return roleCheckResponse; // Block if not a user
+        }
     }
+
+    // Apply security headers globally
+    const res = NextResponse.next();
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    return res;
 }
 
+// Define matchers to apply middleware only on specific routes
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/doctor/:path*'], // Protect these paths
+    matcher: [
+        '/api/user/:path*', // Apply on all /api/user routes
+        '/api/admin/:path*', // Apply on all /api/admin routes
+        '/api/doctor/:path*', // Apply on all /api/doctor routes
+    ],
 };
