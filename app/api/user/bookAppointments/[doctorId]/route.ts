@@ -1,16 +1,31 @@
 import { NextResponse, NextRequest } from 'next/server';
 import dbConnect from '@/lib/db';
-import Appointment from '@/lib/models/Appointment';
 import Doctor from '@/lib/models/Doctor';
+import redis from '@/lib/redis';
+import { getUserEmailById } from '@/app/actions/getUserEmailById';
+import { getUserIdFromToken } from '@/app/actions/getUserIdFromToken';
+
 
 
 export const POST = async (req: NextRequest, { params }: { params: { doctorId: string } }) => {
-
     try {
         await dbConnect();
+        const authHeader = req.headers.get('Authorization');
 
-        const { doctorId } = params; // Extract doctorId from the URL
-        const { userId, appointmentTime, details, symptom } = await req.json();
+        const { doctorId } = params;
+        const { appointmentTime, details, symptom } = await req.json();
+
+        // Get the currently logged-in user's ID from the JWT
+        const userId = await getUserIdFromToken(authHeader);
+        if (!userId) {
+            return NextResponse.json({ success: false, message: 'Unauthorized: No valid token provided' }, { status: 401 });
+        }
+
+        // Get the user's email by their userId
+        const userEmail = await getUserEmailById(userId);
+        if (!userEmail) {
+            return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+        }
 
         // Find the doctor by ID
         const doctor = await Doctor.findById(doctorId);
@@ -23,27 +38,27 @@ export const POST = async (req: NextRequest, { params }: { params: { doctorId: s
             return NextResponse.json({ success: false, message: 'Selected time slot is not available' }, { status: 400 });
         }
 
-        // Create a new appointment
-        const appointment = new Appointment({
+        // Store the appointment data in Redis with a pending status
+        const appointmentData = {
             user: userId,
             doctor: doctorId,
             time: appointmentTime,
             details: details || '',
-            symptom: symptom, // User-provided symptom details for the doctor
-            status: 'pending', // Initial status of the appointment
-        });
+            symptom: symptom,
+            status: 'pending', // Status remains pending until admin approval
+            email: userEmail,  // Add user's email to the appointment data
+        };
 
-        await appointment.save();
-
-        // Remove the booked slot from the doctor's available slots
-        doctor.availableSlots = doctor.availableSlots.filter(slot => slot !== appointmentTime);
-        await doctor.save();
+        // Store the appointment in Redis using a unique key, for example using the appointmentTime and userId
+        await redis.setex(appointmentTime, 4800, JSON.stringify(appointmentData)); // Store for 1 hour
+        console.log("Storing appointment data in Redis:", JSON.stringify(appointmentData));
 
         return NextResponse.json({
             success: true,
-            message: 'Appointment booked successfully',
-            data: appointment,
+            message: 'Appointment booked and awaiting approval',
+            data: appointmentData,
         }, { status: 201 });
+
     } catch (error: any) {
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }

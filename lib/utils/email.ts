@@ -25,3 +25,21 @@ export const sendOTPEmail = async (to: string, otp: string) => {
     throw new Error('Failed to send OTP. Please try again later.');
   }
 };
+
+export const sendEmail = async (to: string, text: string) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER, // Sender address
+      to, // Receiver address
+      subject: 'Notification from Medicare', // Subject line
+      text: `${text}`,
+      html: `<p>${text}</p>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Notification sent to ${to}`);
+  } catch (error) {
+    console.error(`Error sending email to ${to}: `, error);
+    throw new Error('Failed to send Email. Please try again later.');
+  }
+};

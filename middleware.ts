@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.pathname;
 
     // Apply authentication to /api/admin, /api/doctor, and /api/user routes
-    if (url.startsWith('/api/user') || url.startsWith('/api/admin') || url.startsWith('/api/doctor')) {
+    /*  if (url.startsWith('/api/user') || url.startsWith('/api/admin') || url.startsWith('/api/doctor')) {
         const authResponse = await authMiddleware(req); // Apply auth check
         if (authResponse.status !== 200) return authResponse; // Block if not authenticated
 
@@ -31,8 +31,8 @@ export async function middleware(req: NextRequest) {
             const roleCheckResponse = await roleCheckMiddleware(req, 'user'); // Check if the user is a regular user
             if (roleCheckResponse.status !== 200) return roleCheckResponse; // Block if not a user
         }
-    }
-
+    } 
+ */
     // Apply security headers globally
     const res = NextResponse.next();
     res.headers.set('X-Content-Type-Options', 'nosniff');

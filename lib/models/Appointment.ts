@@ -6,6 +6,7 @@ export interface IAppointment extends Document {
     time: string; // ISO 8601 format for both date and time
     status: 'pending' | 'confirmed' | 'cancelled';
     details?: string;
+    email: string;
     symptom: string;
 }
 
@@ -16,6 +17,8 @@ const AppointmentSchema: Schema<IAppointment> = new mongoose.Schema({
     status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' },
     details: { type: String },
     symptom: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+
 }, { timestamps: true });
 
 const Appointment: Model<IAppointment> = mongoose.models.Appointment || mongoose.model<IAppointment>('Appointment', AppointmentSchema);

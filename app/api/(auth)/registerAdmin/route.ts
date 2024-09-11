@@ -30,7 +30,7 @@ export const POST = async (req: Request) => {
 
         console.log("Storing registration data in Redis:", JSON.stringify(registrationData));
 
-        //await sendOTPEmail(email, otp);
+        await sendOTPEmail(email, otp);
 
         return NextResponse.json({ success: true, message: 'OTP sent to email for verification' }, { status: 201 });
 

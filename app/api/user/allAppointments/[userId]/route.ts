@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Appointment from '@/lib/models/Appointment';
 
-export const GET = async (req: Request) => {
+export const GET = async (req: Request, { params }: { params: { userId: string } }) => {
     try {
         await dbConnect();
 
-        const { userId } = await req.json();
+        const { userId } = params;
 
         // Find all appointments for the user
         const appointments = await Appointment.find({ user: userId })
