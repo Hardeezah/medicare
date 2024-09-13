@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import redis from '@/lib/redis'; // Import Redis
 import Hospital from '@/lib/models/Hospital';
 import crypto from 'crypto';
+import { sendEmail } from '@/lib/utils/email';
 
 export const POST = async (req: Request) => {
     try {
@@ -12,18 +13,25 @@ export const POST = async (req: Request) => {
         
         const registrationData = await redis.get(email) as string;
         if (!registrationData) {
-            return NextResponse.json({ success: false, message: 'No registration data found or OTP expired' }, { status: 404 });
+            return NextResponse.json({ success: false, message: 'No registration data found or OTP expired' }, { status: 400 });
         }
 
         console.log("Retrieved registration data from Redis:", registrationData);
         const format = JSON.stringify(registrationData)
 
+        let pendingRegistration;
+        try {
+            pendingRegistration = JSON.parse(format);
         
-        const { name, password, otp: storedOtp } = JSON.parse(format);
+        } catch (parseError) {
+            console.error("Failed to parse registration data", parseError);
+            return NextResponse.json({ success: false, message: 'Failed to parse registration data' }, { status: 401 });
+        }
+        //const { name, password, otp: storedOtp } = JSON.parse(format);
 
         
-        if (storedOtp !== otp) {
-            return NextResponse.json({ success: false, message: 'Invalid OTP' }, { status: 400 });
+        if (pendingRegistration.otp !== otp) {
+            return NextResponse.json({ success: false, message: 'Invalid OTP' }, { status: 403 });
         }
 
         
@@ -31,10 +39,11 @@ export const POST = async (req: Request) => {
 
         // Create the hospital admin in MongoDB
         const newHospital = new Hospital({
-            name,
+            name: pendingRegistration.name,
             email,
-            password, 
+            password: pendingRegistration.password, 
             loginToken,
+            hospitalName: pendingRegistration.hospitalName,  // Hospital name from registration data
             isVerified: true, 
         });
         
@@ -43,6 +52,7 @@ export const POST = async (req: Request) => {
 
         // Remove the temporary registration data from Redis after successful verification
         await redis.del(email);
+        await sendEmail(email, loginToken);
 
         return NextResponse.json({
             success: true,

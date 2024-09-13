@@ -21,16 +21,17 @@ export const POST = async (req: Request) => {
         const otp = crypto.randomBytes(3).toString('hex');
 
         const registrationData ={
-            name: hospitalName,
+            name,
             email,
             password: hashedPassword,
+            hospitalName,
             otp,
         };
         await redis.setex(email, 3600, JSON.stringify(registrationData)); // Store data in Redis for 1 hour
 
         console.log("Storing registration data in Redis:", JSON.stringify(registrationData));
 
-        await sendOTPEmail(email, otp);
+        //await sendOTPEmail(email, otp);
 
         return NextResponse.json({ success: true, message: 'OTP sent to email for verification' }, { status: 201 });
 

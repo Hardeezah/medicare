@@ -1,9 +1,8 @@
 "use client"
 import Image from "next/image";
-import Heading from "./components/Heading";
-import Button from "./components/Button";
 import { useRouter } from "next/navigation";
-import { LoginForm } from "./components/forms/LoginForm";
+import Heading from "../components/Heading";
+import { LoginCodeForm } from "../components/forms/LoginCodeForm";
 export default function Home() {
   const router = useRouter()
   return (
@@ -25,9 +24,9 @@ export default function Home() {
           <div className="mt-12">
             <Heading
               title="Welcome Back!"
-              subtitle="Please Log in to your account"
+              subtitle="Log in to Admin's account"
             />
-            <LoginForm />
+            <LoginCodeForm />
           </div>
         </div>
       </section>

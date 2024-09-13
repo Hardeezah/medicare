@@ -46,7 +46,7 @@ export const POST = async (req: Request) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log("Password does not match"); // Debugging log
-      return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
     }
 
     const role = user.role;

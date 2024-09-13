@@ -12,6 +12,8 @@ export const POST = async (req: Request) => {
 
         // Find the hospital by invite token
         const hospital = await Hospital.findOne({ "inviteTokens.token": inviteToken });
+        console.log(hospital);
+        
 
         if (!hospital) {
             return NextResponse.json({ success: false, message: 'Invalid or expired invite token' }, { status: 400 });
@@ -41,6 +43,7 @@ export const POST = async (req: Request) => {
             email,
             password,
             hospitalId: hospital._id,
+            hositalName:hospital.name,
             inviteToken,
             otp, // Store OTP for verification
         };
@@ -48,7 +51,7 @@ export const POST = async (req: Request) => {
         await redis.setex(email, 3600, JSON.stringify(registrationData)); // Store in Redis for 1 hour
         console.log(registrationData);
         // Send OTP to the doctor's email
-       // await sendOTPEmail(email, otp);
+        await sendOTPEmail(email, otp);
 
         return NextResponse.json({
             success: true,

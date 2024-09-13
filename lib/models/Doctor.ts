@@ -28,14 +28,14 @@ const DoctorSchema: Schema<IDoctor> = new mongoose.Schema({
   
 });
 
-DoctorSchema.pre<IDoctor>('save', async function (next) {
+/* DoctorSchema.pre<IDoctor>('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
-});
+}); */
 
 const Doctor: Model<IDoctor> = mongoose.models.Doctor || mongoose.model<IDoctor>('Doctor', DoctorSchema);
 export default Doctor;

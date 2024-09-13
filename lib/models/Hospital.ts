@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
-
+          
 export interface IInviteToken extends Document {
   token: string;
   isUsed: boolean;
@@ -10,6 +10,8 @@ export interface IInviteToken extends Document {
 export interface IHospital extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
+  hospitalName: string;
+
   email: string;
   password: string;
   loginToken: string;
@@ -31,6 +33,8 @@ const InviteTokenSchema: Schema<IInviteToken> = new mongoose.Schema({
 const HospitalSchema: Schema<IHospital> = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true },
+  hospitalName: { type: String, required: true, trim: true },
+
   password: { type: String, required: true, minlength: 6 },
   loginToken: { type: String, unique: true, required: true },
   isVerified: { type: Boolean, default: false },

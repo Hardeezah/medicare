@@ -20,9 +20,11 @@ export const sendOTPEmail = async (to: string, otp: string) => {
 
     await transporter.sendMail(mailOptions);
     console.log(`OTP sent to ${to}`);
+    return true;
   } catch (error) {
     console.error(`Error sending OTP to ${to}: `, error);
-    throw new Error('Failed to send OTP. Please try again later.');
+    return false;
+    
   }
 };
 
@@ -41,5 +43,6 @@ export const sendEmail = async (to: string, text: string) => {
   } catch (error) {
     console.error(`Error sending email to ${to}: `, error);
     throw new Error('Failed to send Email. Please try again later.');
+    
   }
 };

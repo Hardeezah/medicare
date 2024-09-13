@@ -1,10 +1,10 @@
 "use client"
 import Image from "next/image";
-import Heading from "./components/Heading";
-import Button from "./components/Button";
 import { useRouter } from "next/navigation";
-import { LoginForm } from "./components/forms/LoginForm";
-export default function Home() {
+import Heading from "../components/Heading";
+import { RegisterAdminForm } from "../components/forms/RegisterAdminForm";
+
+export default function RegisterAdmin() {
   const router = useRouter()
   return (
     <div className="flex h-screen max-h-screen">
@@ -24,10 +24,10 @@ export default function Home() {
           </div>
           <div className="mt-12">
             <Heading
-              title="Welcome Back!"
-              subtitle="Please Log in to your account"
+              title="Hi there👋!"
+              subtitle="Get started with Medicare!"
             />
-            <LoginForm />
+            <RegisterAdminForm/>
           </div>
         </div>
       </section>
