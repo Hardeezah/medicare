@@ -1,17 +1,8 @@
 // models/UserProfile.ts
 import mongoose, { Document, Schema, Model } from 'mongoose';
 
-export interface ICompletedAppointment {
-    doctorId: mongoose.Types.ObjectId;
-    appointmentId: mongoose.Types.ObjectId;
-    time: Date;
-    details: string;
-    symptom: string;
-    completedAt: Date; // Timestamp when the appointment was completed
-}
-
 export interface IUserProfile extends Document {
-    userId: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId;  // Link to User
     name: string;
     email: string;
     dateOfBirth: Date;
@@ -21,17 +12,8 @@ export interface IUserProfile extends Document {
     heartRate?: number;
     bloodSugar?: number;
     weight?: number;
-    medicalHistory: ICompletedAppointment[]; // Array of completed appointments
+    medicalHistory?: string[]; // List of past medical records or illnesses
 }
-
-const CompletedAppointmentSchema: Schema<ICompletedAppointment> = new mongoose.Schema({
-    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
-    appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment', required: true },
-    time: { type: Date, required: true },
-    details: { type: String, required: true },
-    symptom: { type: String, required: true },
-    completedAt: { type: Date, default: Date.now }, // Automatically set completion time
-});
 
 const UserProfileSchema: Schema<IUserProfile> = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -44,7 +26,7 @@ const UserProfileSchema: Schema<IUserProfile> = new mongoose.Schema({
     heartRate: { type: Number },
     bloodSugar: { type: Number },
     weight: { type: Number },
-    medicalHistory: { type: [CompletedAppointmentSchema], default: [] }, // Medical history stores completed appointments
+    medicalHistory: { type: [String] }, // List of conditions or illnesses
 }, {
     timestamps: true,
 });

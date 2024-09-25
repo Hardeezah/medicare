@@ -46,7 +46,7 @@ const Page = () => {
           title: "Success!",
           description: "OTP verification completed successfully.",
         });
-        router.push('/');  // Redirect after successful verification
+        router.push('/dashboard');  // Redirect after successful verification
       }
   
     } catch (error: any) {
